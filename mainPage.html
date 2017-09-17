@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    .superTagDiv {
+      margin: 0 auto;
+      width: 100%;
+    }
+    td {
+      text-align: center;
+    }
+    th {
+      text-align: center;
+    }
+    table {
+      margin: auto;
+    }
+    .tag {
+      background-color: #E74C3C;
+      margin: 8px;
+      padding: 4px;
+      padding-left: 7px;
+      padding-right: 7px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    .delete {
+      background-color: Transparent;
+      background-repeat:no-repeat;
+      border: none;
+      cursor:pointer;
+      overflow: hidden;
+      outline:none;
+    }
+    .tagButton {
+      margin-left: 7px;
+    }
+    .month {
+      background-color: #BDF25D;
+    }
+    .date {
+      background-color: lightseagreen;
+    }
+    .year {
+      background-color: lightsalmon;
+    }
+    body {
+    	background-color: #2C3E50;
+      font-family: "Bookman", Georgia, sans-serif;
+      color: #ECF0F1;
+      margin: 0;
+    }
+    .content {
+    	background-color: #2980B9;
+    }
+    .topDiv {
+    	text-align: center;
+      padding: 1px;
+      margin: 10px;
+      margin-bottom: 25px;
+      border-radius: 14px;
+    }
+    h1 {
+      background-color: #3498DB;
+      padding: 3px;
+      margin-bottom: 0px;
+    }
+    h3 {
+      margin-top: 0px;
+    }
+    .clarify {
+
+      padding-bottom: 5px;
+      margin-bottom: 0px;
+    }
+    .enterYour {
+      text-align: center;
+    }
+    .inputDiv {
+      text-align: center;
+    }
+    .left {
+      text-align: center;
+    }
+    .tagDiv {
+      padding-top: 50px;
+    }
+    .collectDiv {
+      padding-top: 62px;
+    }
+    .button  {
+      border-radius: 5px;
+      font-family: "Bookman", Georgia, sans-serif;
+      background-color: #3498DB;
+      color: #ECF0F1;
+      border-style: solid;
+      border-color: #2980B9;
+    }
+  </style>
+  <script>
+
+  </script>
+</head>
+<body>
+
+<div class="content topDiv">
+  <h1>Calendar Apps</h1>
+  <h2>A more modern approach to scheduling new events</h3>
+</div>
+
+<div class="inputDiv">
+  <p class="enterYour">Enter your individual event details below:</p>
+  <p><input  class="textBox" onkeypress="pressEnter(event);">
+  <input type="button" class="submitTag button" value="Submit" onclick="printTag();"></p>
+</div>
+<div class="superTagDiv">
+  <div class="left">
+  <div class="tagDiv">
+    <span class="clarify">Clarify the details for us: </span>
+  </div>
+  <div class="collectButtonDiv"></div>
+</div>
+  <div class="collectDiv">
+    <table>
+      <tr>
+        <th>Time</th>
+        <th>Date</th>
+        <th>Month</th>
+        <th>Year</th>
+        <th>Day</th>
+        <th>Desc</th>
+      </tr>
+      <tr>
+        <td class="timeBox"></td>
+        <td class="dateBox"></td>
+        <td class="monthBox"></td>
+        <td class="yearBox"></td>
+        <td class="dayBox"></td>
+        <td class="descBox"></td>
+      </tr>
+    </table>
+  </div>
+</div>
+<script>
+
+  //Arrays for parsing info
+  const shortMonths = new Array("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec");
+  const shortDays = new Array("sun", "mon", "tue", "wed", "thu", "fri", "sat");
+  const weekDays = new Array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
+
+  //For cross-checking a string with arrays above
+  function checkArray (shortString, array)
+  {
+    for(var i = 0; i < array.length; i++)
+    {
+      if(array[i].includes(shortString)) return true;
+    }
+    return false;
+  }
+
+  //Constants for HTML elements
+  const collectButtonDiv = document.querySelector('.collectButtonDiv');
+  const tagDiv = document.querySelector('.tagDiv');
+  const textBox = document.querySelector('.textBox');
+  const timeBox = document.querySelector('.timeBox');
+  const dateBox = document.querySelector('.dateBox');
+  const monthBox = document.querySelector('.monthBox');
+  const yearBox = document.querySelector('.yearBox');
+  const dayBox = document.querySelector('.dayBox');
+  const descBox = document.querySelector('.descBox');
+
+  //For numbering tags
+  var entry = 1;
+
+  //Default tagDiv content
+  const tagDivDefault = '<span class="clarify">Clarify the details for us: </span>';
+
+  //When enter is pressed in the textbox
+  function pressEnter(e)
+  {
+    if(e.keyCode == 13)
+    {
+      printTag();
+    }
+  }
+
+  //Function that creates tags
+  function printTag()
+  {
+    const tagText = textBox.value;
+    const curTag = new Tag(tagText);
+    curTag.check();
+
+    var className = "";
+    if(curTag.trueStrings.length == 1)
+    {
+      className = curTag.trueStrings[0];
+    }
+
+    tagDiv.innerHTML += `</br><span class="tag ` + className + `" id="tagNum${entry}">` +
+      tagText + genButtons(curTag.trueStrings) + deleteButton(entry) + '</span>';
+
+    entry++;
+    textBox.value = "";
+
+    collectCheck();
+  }
+
+  //Tag object, used for generating tags
+  function Tag(text)
+  {
+    this.text = text;
+
+    this.isNum = false;
+    this.isTime = false;
+    this.isString = false;
+
+    this.trueStrings = new Array();
+
+    this.addString = function(string)
+    {
+      this.trueStrings[this.trueStrings.length] = string;
+      return true;
+    }
+
+    //Checks what criteria the tag might fall under. Ex: date or time
+    this.check = function()
+    {
+      this.isTime = (this.text.includes(":")) ? this.addString("time"): false;
+      this.isNum = (parseInt(this.text) >= 0 & !this.isTime) ? true: false;
+
+      if(this.isNum)
+      {
+        const num = parseInt(this.text);
+
+        this.isDate = (num < 32) ? this.addString("date"): false;
+        this.isMonth = (num < 13) ? this.addString("month"): false;
+        this.isYear = (num > 2016) ? this.addString("year"): false;
+        this.isTime = (num < 24) ? this.addString("time"): false;
+      }
+
+      this.isString = (!this.isTime & !this.isNum) ? true: false;
+
+      if(this.isString)
+      {
+        var shortString = this.text.substring(0,2).toLowerCase();
+        this.isMonth = checkArray(shortString, shortMonths);
+        if(this.isMonth) this.addString("month");
+        this.isDay = checkArray(shortString, shortDays);
+        if(this.isDay) this.addString("day");
+        this.isDesc = this.addString("desc");
+      }
+    }
+  }
+
+  //Gathers info from a tag and returns buttons for clarification
+  function genButtons(input)
+  {
+    var returnString = "";
+    if(input.length > 1)
+    {
+      for (var i = 0; i < input.length; i++)
+      {
+        this.idString = 'tagNum' + entry.toString();
+        returnString += `<input type="button" class="tagButton button" value="${input[i]}"
+                            onclick="clarify('${this.idString}', '${input[i]}');">`;
+      }
+    }
+    return returnString;
+  }
+
+  //Returns the delete button for tags. x = entry
+  function deleteButton(x)
+  {
+    return `<input type="button" class="delete" value="X" onclick="deleteTag('tagNum${x}')">`;
+  }
+
+  //Function actioned when delete button is pressed
+  function deleteTag(idString)
+  {
+    const allTags = tagDiv.innerHTML.split('<br>');
+    for(var i = 0; i < allTags.length; i++)
+    {
+      if(!allTags[i].includes(idString)) tagDiv.innerHTML += allTags[i] + '<br>';
+    }
+    collectCheck();
+    tagDiv.innerHTML = "";
+  }
+
+  //Function actioned when a clarification button is clicked
+  function clarify(tagId, button)
+  {
+    const changeTag = document.querySelector('#' + tagId);
+    const tagString = changeTag.innerHTML.split('<')[0];
+    changeTag.innerHTML = tagString + deleteButton(entry);
+    changeTag.classList.add(button);
+    collectCheck();
+  }
+
+  //Checks if the Collect button should be visible or not
+  function collectCheck()
+  {
+    const descTag = tagDiv.querySelector('.desc');
+    const dateTag = tagDiv.querySelector('.date');
+
+    if(descTag != null & dateTag != null)
+    {
+      addCollect();
+    }
+    else
+    {
+      collectButtonDiv.innerHTML = "";
+    }
+  }
+
+  //Function that recreates the Collect button
+  function addCollect()
+  {
+    collectButtonDiv.innerHTML = '<input type="button" value="Collect" class="collectTags button" onclick="collect();">';
+  }
+
+  //Function actioned when collect button is pressed
+  //Collects tags to table
+  function collect()
+  {
+    var tags = tagDiv.querySelectorAll('.tag');
+    const collectDiv = tagDiv.innerHTML.split('<br>');
+
+    for(var i = 0; i < tags.length; i++)
+    {
+      if(tags[i].classList.contains("date"))
+      {
+        dateBox.innerHTML += collectDiv[i+1] + '<br>';
+      }
+      else if(tags[i].classList.contains("month"))
+      {
+        monthBox.innerHTML += collectDiv[i+1] + '<br>';
+      }
+      else if(tags[i].classList.contains("year"))
+      {
+        yearBox.innerHTML += collectDiv[i+1] + '<br>';
+      }
+      else if(tags[i].classList.contains("day"))
+      {
+        dayBox.innerHTML += collectDiv[i+1] + '<br>';
+      }
+      else if(tags[i].classList.contains("time"))
+      {
+        timeBox.innerHTML += collectDiv[i+1] + '<br>';
+      }
+      else if(tags[i].classList.contains("desc"))
+      {
+        descBox.innerHTML += collectDiv[i+1] + '<br>';
+      }
+    }
+    const curDate = new Date();
+
+    if(timeBox.innerHTML === "") timeBox.innerHTML = "All Day";
+    if(yearBox.innerHTML === "") yearBox.innerHTML = curDate.getFullYear();
+    if(monthBox.innerHTML === "") monthBox.innerHTML = curDate.getMonth();
+
+    tagDiv.innerHTML = tagDivDefault;
+    collectButtonDiv.innerHTML = "";
+  }
+
+</script>
+
+</body>
+</html>
